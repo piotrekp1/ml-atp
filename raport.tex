@@ -1,0 +1,37 @@
+\documentclass{article} % Try also "scrartcl" or "paper"
+\usepackage{blindtext} % for dummy text
+\usepackage{polski}
+\usepackage[utf8]{inputenc}
+
+
+% \usepackage[margin=2cm]{geometry}   % to change margins
+% \usepackage{titling}             % Uncomment both to   
+% \setlength{\droptitle}{-2cm}     % change title position 
+\author{Piotr Piękos}
+\title{%\vspace{-1.5cm}            % Another way to do
+Premise selection with machine learning}
+\begin{document}
+\maketitle
+
+\section{Introduction}
+\section{General Description}
+\section{Dataset creation}
+\section{Models}
+\section{Evaluation}
+\section{Next Steps}
+\begin{itemize}
+\item \textbf{Training LGBM on the whole dataset} - that simple thing could be made by using CLI (lesser memory requirements) or by training machine with more RAM, probably that single step would give a great improvement.
+\item \textbf{Iterative training} - theorems that are proved can later be used as samples for new training sets, which gets bigger with every iteration.
+\item \textbf{Hyperparameters} - There are a lot of parameters in the training. From lgbm parameters to 'meta-parameters': \begin{itemize}
+	\item Ratio of False to True samples in training dataset - setting it higher would probably improve results, as it would better resolve real scenario.
+	\item number of trees
+	\item trees depth
+	\item regularization
+	\end{itemize}
+\item \textbf{More stubborn prediction with dynamic number of premises} - For now the program doesn't even check whether solver gave up (timeout) or didn't manage to solve (not enough premises). It could check it and increase number (start with small numbers) of premises until it finds proof or times out. That's important because for some theorems it may be sufficient to choose 2 premises, but for some many premises are needed. It's impossible to model with current architecture.
+\item \textbf{Better Features} - Using semantic dependencies between features or at least extracting more semantic features (as with autoencoder attempt).
+
+
+\end{itemize}
+
+\end{document}
