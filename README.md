@@ -1,10 +1,3 @@
----
-author:
-- Piotr Piękos
-title:  Premise selection with machine learning
----
-
-\maketitle
 Introduction
 ============
 
@@ -150,27 +143,26 @@ Two evaluation methods were applied for each model:
 -   PROVED %: % of theorems proved with E-PROVER with this model as a
     premise selector
 
-  ------------------------- ----------- ----------
-            Model            AUC 75/25   PROVED %
-     \[0.5ex\] lgbmnaive      0.92015      53.4
-         lgbmshallow          0.93747      46.0
-          lgbmdeep            0.94295      52.0
-     lgbmdeepshallowmean      0.94435      53.4
-   lgbmdeepshallowmean\_16    0.91452      52.6
-          lgbmembed           0.91920      45.2
-             rf               0.84701      39.8
-            total               --         62.6
-           random               --         17.4
-           \[1ex\]                      
-  ------------------------- ----------- ----------
+   
+  |          Model          |  AUC 75/25 |  PROVED % |
+  |-------------------------|------------|-----------| 
+  |         lgbmnaive       |   0.92015  |    53.4   |
+  |       lgbmshallow       |   0.93747  |    46.0   |
+  |        lgbmdeep         |   0.94295  |    52.0   |
+  |   lgbmdeepshallowmean   |   0.94435  |    53.4   |
+  | lgbmdeepshallowmean\_16 |   0.91452  |    52.6   |
+  |        lgbmembed        |   0.91920  |    45.2   |
+  |           rf            |   0.84701  |    39.8   |
+  |          total          |     --     |    62.6   |
+  |         random          |     --     |    17.4   |
+  
 
 Model similarities
 ------------------
 
 ![ $a_{i,j} = \frac{|T_i \cap T_j|}{|T_j|}$, $T_i$ - Set of theorems
 proved by model $i$
-[]{label="fig:modelsims"}](model_dependencies.png){#fig:modelsims
-width="\linewidth"}
+[]{label="fig:modelsims"}](model_dependencies.png)
 
 . Figure 1 shows how many (%) of j theorems (proved by model j) are
 proved by model i. $a_{i,j} = 1$ means that model i is at every aspect
