@@ -2,8 +2,9 @@
 \usepackage{blindtext} % for dummy text
 \usepackage{polski}
 \usepackage[utf8]{inputenc}
+\usepackage{listings}
 
-
+\usepackage{graphicx}
 % \usepackage[margin=2cm]{geometry}   % to change margins
 % \usepackage{titling}             % Uncomment both to   
 % \setlength{\droptitle}{-2cm}     % change title position 
@@ -30,6 +31,11 @@ Approach is as follows:
 \item model on that dataset is trained to predict usefulness of the feature.
 \end{enumerate}
 
+Whole processing is in \textit{'notebooks/training.ipynb'} 
+(some parts were done with LGBM CLI after saving datasets to LIBSVM format, because lgbm python interface takes much more RAM).
+
+Results are analysed in \textit{'notebooks/compare\_results.ipynb'}
+
 \section{Dataset creation}
 
 As mentioned above, lists of premises for theorems are translated into pairs (theorem, pair). Rows created with that manner are labeled with 1 for usefulness. 
@@ -46,13 +52,62 @@ One could also try to do embeddings based theorem-premise relationships
 
 \section{Models}
 
-Following models are tested:
-\begin{itemize}
 
-\item LightGBM - raw features
-\item LightGBM - embeddings
-\item LightGBM - raw features + embeddings
-\item RandomForest - raw features
+6 LGBM models and 1 RF models are tested.
+5 LGBM models and RF model are on raw data, 1 LGBM model is on AutoEncoder Embeddings.
+One of the LGBM models is on embeddings from AutoEncoder
+
+LGBM differ in hyperparameters, hyperparameters sets:
+(shallow, deep, naive)  \newline\
+\textbf{NAIVE Hyperparameters}
+\begin{lstlisting}[language={}]
+output_model=LGBM_params_naive.bst
+objective = binary
+metric = auc
+is_unbalance = true
+boosting = gbdt
+max_depth = 80
+learning_rate = 0.05
+num_rounds = 300
+data = train.libsvm
+
+\end{lstlisting}
+
+
+\textbf{SHALLOW Hyperparameters}
+\begin{lstlisting}[language={}]
+output_model=LGBM_params_shallow.bst
+objective = binary
+metric = auc
+is_unbalance = true
+boosting = gbdt
+num_leaves = 30
+feature_fraction = 0.75
+bagging_fraction = 0.8
+bagging_freq = 20
+learning_rate = 0.035
+lambda_l2 = 0.06
+verbose = 1
+nthreads = 6
+max_bin = 255
+num_rounds = 5000
+data = train.libsvm
+\end{lstlisting}
+\textbf{DEEP Hyperparameters are basically the same but without restriction on num leaves}
+
+
+Following models are tested:
+(If not stated otherwise there are 8 false clauses per every positive clause)
+\begin{itemize}
+\item lgbmnaive- lightgbm trained with NAIVE hyperparameters
+\item lgbmshallow - lightgbm trained with SHALLOW hyperparameters
+\item lgbmdeep - lightgbm trained with DEEP hyperparameters
+\item lgbmdeepshallowmean - average of predictions of lgbmdeep and lgbmshallow
+\item lgbmdeepshallowmean\_16 - average of predictions of lgbmdeep (trained on dataset with 16 false clauses per positive clause) and lgbmshallow (trained on datasest with 16 false clauses per positive clause)
+\item lgbmembed - lightgbm trained only on embeddings from AutoEncoder
+\item rf - RandomForest
+\item total - not a model but a sum of all theorems proved by any of the models.
+\item random - chooses random list of premises, used for benchmark (just an estimate of a benchmark, for a better benchmark it should be checked few times on many permutations, here results are just for one random permutation.)
 \end{itemize}
 
 
@@ -72,17 +127,25 @@ Two evaluation methods were applied for each model:
 \begin{center}
  \begin{tabular}{||c | c | c||} 
  \hline
- Model & AUC 75/25 & PROVED \\ [0.5ex] 
+ Model & AUC 75/25 & PROVED \% \\ [0.5ex] 
  \hline\hline
- 1 & 6 & 87837 \\ 
+ lgbmnaive & 0.92015 & 53.4 \\ 
  \hline
- 2 & 7 & 78 \\
+ lgbmshallow & 0.93747 & 46.0 \\
  \hline
- 3 & 545 & 778 \\
+ lgbmdeep & 0.94295 & 52.0 \\
  \hline
- 4 & 545 & 18744\\
+ lgbmdeepshallowmean  & 0.94435 & 53.4\\
  \hline
- 5 & 88 & 788 \\ [1ex] 
+ lgbmdeepshallowmean\_16 & 0.91452 & 52.6 \\
+ \hline
+ lgbmembed & 0.91920 & 45.2 \\
+ \hline
+ rf & 0.84701 & 39.8 \\
+ \hline
+ total & -- & 62.6 \\ 
+ \hline
+ random & -- & 17.4 \\ [1ex] 
  \hline
 \end{tabular}
 \end{center}
@@ -93,14 +156,20 @@ Two evaluation methods were applied for each model:
 
 
 
-$ T_i $ - Set of theorems proved by model $i$.
 
 
-Diagram of how well model a covered theorems proved by b.
-\newline 
+\begin{figure}[!htb]
+  \includegraphics[width=\linewidth]{model_dependencies.png}
+  \caption{
+    $a_{i,j} = \frac{|T_i \cap T_j|}{|T_j|}$,
+$ T_i $ - Set of theorems proved by model $i$
+  }
+  \label{fig:modelsims}
+\end{figure}
+.\newline
+Figure 1 shows how many (\%) of j theorems (proved by model j) are proved by model i. $a_{i,j} = 1$ means that model i is at every aspect better (not worse) then model j (proved all his theorems).There is no nontrivial occurences of that.
 
-$a_{i,j} = \frac{|T_i \cap T_j|}{|T_j|}$
-
+As you can see even random permutation of premises isn't totally covered by any of the models and none of them is actually even really close. This suggests a lot of space for improvements.
 
 \section{Next Steps}
 \begin{itemize}
@@ -121,5 +190,9 @@ $a_{i,j} = \frac{|T_i \cap T_j|}{|T_j|}$
 \item \textbf{Recommender System approach} - This setup is very similar to the recommender system approach. We are literally recommending a SAT solver set of premises. I'd like to try some RecSyss approaches which could for example help with the problem of ignored set dependencies (even basic like apriori algorithms, although that definitely be too simple).
 
 \end{itemize}
+
+\section{Conclusion}
+
+Despite using only syntactic features which are obfuscated and many shortcuts taken along the way models seem to be quite useful in helping selecting the best premises. There is still a huge space for improvement which is shown in previous chapter. I estimate that with these improvements model could reach 85\% - 90\% of theorems coverage.
 
 \end{document}
